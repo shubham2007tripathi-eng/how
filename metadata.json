@@ -1,0 +1,10 @@
+{
+  "name": "justice voice",
+  "description": "Friendly legal awareness assistant for Indian citizens translating Bharatiya Nyaya Sanhita (BNS) into simple Hinglish/English with practical advice and emergency support.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

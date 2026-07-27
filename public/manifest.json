@@ -1,0 +1,25 @@
+{
+  "name": "Nyaya Setu - Citizen Legal Assistant",
+  "short_name": "Nyaya Setu",
+  "description": "Friendly legal awareness assistant for Indian citizens translating Bharatiya Nyaya Sanhita (BNS) into simple Hinglish with offline emergency helplines.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "categories": ["utilities", "legal", "productivity"],
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
