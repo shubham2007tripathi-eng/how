@@ -70,7 +70,7 @@ EXECUTION RULE FOR KEYWORD MATCHING:
 # Gemini Model Setup
 try:
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemma-4-31b-it",
         system_instruction=SYSTEM_PROMPT
     )
 except Exception as e:
