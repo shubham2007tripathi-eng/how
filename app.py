@@ -5,8 +5,8 @@ import streamlit as st
 import google.generativeai as genai
 
 # --- API CONFIGURATION ---
-# Streamlit secrets or environment variable or placeholder
-API_KEY = os.environ.get("GEMINI_API_KEY", "APNI_API_KEY_YAHAN_DALEIN")
+# Reads from Streamlit Cloud Secrets first, then falls back to local env var
+API_KEY = st.secrets.get("GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY", "APNI_API_KEY_YAHAN_DALEIN")
 if API_KEY and API_KEY != "APNI_API_KEY_YAHAN_DALEIN":
     genai.configure(api_key=API_KEY)
 
@@ -67,7 +67,7 @@ EXECUTION RULE FOR KEYWORD MATCHING:
   "I am an AI assistant, not a lawyer. For court cases, consult a legal professional."
 """
 
-# Gemini Model Setup
+# --- Gemini Model Setup ---
 try:
     model = genai.GenerativeModel(
         model_name="gemma-4-31b-it",
@@ -77,9 +77,9 @@ except Exception as e:
     model = None
 
 # --- STREAMLIT UI DESIGN ---
-st.set_page_config(page_title="Nyaya Setu - Legal Buddy", page_icon="⚖️", layout="centered")
+st.set_page_config(page_title="Justice Voice - Legal Buddy", page_icon="⚖️", layout="centered")
 
-st.title("⚖️ Nyaya Setu (न्याय सेतु)")
+st.title("⚖️ Justice Voice (न्याय वाणी)")
 st.subheader("Aapka Apna Legal Buddy - Har Kanooni Sawal ka Aasan Jawab")
 
 # Initialize session state keys safely
@@ -133,7 +133,7 @@ if active_query and not st.session_state.is_processing:
         with st.chat_message("assistant"):
             with st.spinner("Nyaya Setu soch raha hai..."):
                 try:
-                    if not API_KEY or API_KEY == "APNI_API_KEY_YAHAN_DALEIN":
+                    if not API_KEY or API_KEY == "APNI_API_KEY_YAHAN_DALEIN" or model is None:
                         reply_text = (
                             "Aapka sawal mil gaya hai! Nyaya Setu real-time response ke liye kripya apni GEMINI_API_KEY set karein. "
                             "Indian law ke mutabiq aap kisi bhi emergency me Police 112, Cyber Crime 1930, ya Women Helpline 1091 par turant sampark kar sakte hain.\n\n"
@@ -152,4 +152,3 @@ if active_query and not st.session_state.is_processing:
     else:
         st.session_state.is_processing = False
         st.warning("Detected empty input or default fallback string. Please try speaking or typing again.")
-
