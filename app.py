@@ -2,11 +2,10 @@ import os
 import re
 import time
 import streamlit as st
-import streamlit.components.v1 as components
 import google.generativeai as genai
+from streamlit_mic_recorder import speech_to_text
 
 # --- API CONFIGURATION ---
-# Reads from Streamlit Cloud Secrets first, then falls back to local env var
 API_KEY = st.secrets.get("GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY", "APNI_API_KEY_YAHAN_DALEIN")
 if API_KEY and API_KEY != "APNI_API_KEY_YAHAN_DALEIN":
     genai.configure(api_key=API_KEY)
@@ -14,7 +13,7 @@ if API_KEY and API_KEY != "APNI_API_KEY_YAHAN_DALEIN":
 # --- TTS & UI TEXT SANITIZATION FUNCTION ---
 def sanitize_text_for_ui_and_voice(raw_text):
     """
-    Cleans markdown symbols, LaTeX artifacts, formatting tags, and unwanted syntax 
+    Cleans markdown symbols, LaTeX artifacts, formatting tags, and unwanted syntax
     so the speech reader (TTS) and UI display smooth, natural text.
     """
     if not raw_text:
@@ -48,7 +47,7 @@ SYSTEM_PROMPT = """
 You are 'Nyaya Setu', an expert legal assistant for Indian citizens, specializing in the BNS (Bharatiya Nyaya Sanhita).
 
 ================================================================================
-COLLOQUIAL HINDI TO LEGAL SECTION MAPPING DIRECTORY (CRITICAL - INTERNAL USE ONLY):
+COLLOQUIAL HINDI TO LEGAL SECTION MAPPING DIRECTORY (INTERNAL USE ONLY):
 ================================================================================
 You must instantly recognize everyday Hindi speech transcripts and map them to their exact legal definitions. This directory is for YOUR internal reasoning only — never repeat, summarize, or reference this directory structure in your visible reply.
 
@@ -75,7 +74,7 @@ OUTPUT FORMAT ENFORCEMENT (STRICT — MUST FOLLOW):
 - NEVER output LaTeX symbols like $\\rightarrow$, $\\times$, or similar notation.
 - NEVER prefix your answer with labels like "Input:", "Legal Mapping:", "Mapping Directory Rule:", or similar meta-commentary.
 - Respond ONLY with the final natural, warm, conversational answer to the citizen's question.
-- Write in flowing Hinglish/Hindi paragraphs. Use bullet points only where it improves readability, not as a default structure.
+- Write in flowing Hinglish/Hindi paragraphs. Use bullet points only where it improves readability.
 - Never reject an input due to informal phrasing or Devanagari script.
 - Always conclude your response with this exact sentence, word for word:
   "I am an AI assistant, not a lawyer. For court cases, consult a legal professional."
@@ -93,7 +92,6 @@ except Exception as e:
 # --- STREAMLIT UI DESIGN ---
 st.set_page_config(page_title="Justice Voice - Legal Buddy", page_icon="⚖️", layout="centered")
 
-# Custom CSS for a closer glassmorphism look matching the AI Studio version
 st.markdown("""
 <style>
 .stApp {
@@ -115,8 +113,6 @@ st.subheader("Aapka Apna Legal Buddy - Har Kanooni Sawal ka Aasan Jawab")
 # Initialize session state keys safely
 if "messages" not in st.session_state:
     st.session_state.messages = []
-if "user_transcript" not in st.session_state:
-    st.session_state.user_transcript = ""
 if "is_processing" not in st.session_state:
     st.session_state.is_processing = False
 
@@ -125,75 +121,31 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- MICROPHONE INPUT VIA BROWSER SPEECH RECOGNITION (INJECTED JS) ---
-mic_component_value = components.html(
-    """
-    <div style="display:flex; align-items:center; gap:10px; font-family:sans-serif;">
-      <button id="micBtn" style="
-          background: linear-gradient(90deg,#f97316,#ec4899);
-          color:white; border:none; border-radius:12px;
-          padding:10px 16px; font-weight:700; cursor:pointer;">
-        🎤 Bolein
-      </button>
-      <span id="micStatus" style="font-size:12px; color:#555;"></span>
-    </div>
-    <script>
-    const btn = document.getElementById('micBtn');
-    const status = document.getElementById('micStatus');
-    let recognition;
-
-    function sendToStreamlit(text) {
-      const streamlitEvent = new CustomEvent("streamlit:setComponentValue", { detail: text });
-      window.parent.postMessage({
-        type: "streamlit:setComponentValue",
-        value: text
-      }, "*");
-    }
-
-    btn.addEventListener('click', () => {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        status.innerText = "Mic not supported in this browser.";
-        return;
-      }
-      recognition = new SpeechRecognition();
-      recognition.lang = "hi-IN";
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      recognition.onstart = () => { status.innerText = "Listening..."; };
-      recognition.onerror = (e) => { status.innerText = "Error: " + e.error; };
-      recognition.onend = () => { status.innerText = "Stopped."; };
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        status.innerText = "Heard: " + transcript;
-        sendToStreamlit(transcript);
-      };
-
-      recognition.start();
-    });
-    </script>
-    """,
-    height=70,
+# --- MICROPHONE INPUT (via streamlit-mic-recorder, reliable component) ---
+mic_transcript_text = speech_to_text(
+    language='hi-IN',
+    start_prompt="🎤 Bolein",
+    stop_prompt="⏹️ Stop",
+    just_once=True,
+    use_container_width=False,
+    key='mic_input'
 )
 
 # --- USER INPUT HANDLING & BULLETPROOF INPUT ROUTER WITH ASYNC STATE LOCKING ---
 chat_input_text = st.chat_input("Yahan apni problem likhein ya bolein...")
-mic_transcript_text = mic_component_value if isinstance(mic_component_value, str) and mic_component_value.strip() else None
 
 active_query = None
 
 if chat_input_text:
     active_query = chat_input_text
 elif mic_transcript_text:
-    time.sleep(0.1)
     active_query = mic_transcript_text
 
 if active_query and not st.session_state.is_processing:
     st.session_state.is_processing = True
     cleaned_query = str(active_query).strip()
 
+    # Blacklisted canned fallback strings to filter out
     blacklisted_fallbacks = [
         "Aapko pareshan hone ki zarurat nahi hai",
         "Section 173",
