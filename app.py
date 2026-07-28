@@ -6,8 +6,8 @@ import google.generativeai as genai
 
 # --- API CONFIGURATION ---
 # Reads from Streamlit Cloud Secrets first, then falls back to local env var
-API_KEY = st.secrets.get("GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY", "AIzaSyDT7AjjhJWQjtnxGJyPOMZvpy_qvNBrvw")
-if API_KEY and API_KEY != "AIzaSyDT7AjjhJWQjtnxGJyPOMZvpy_qvNBrvw":
+API_KEY = st.secrets.get("GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY", "APNI_API_KEY_YAHAN_DALEIN")
+if API_KEY and API_KEY != "APNI_API_KEY_YAHAN_DALEIN":
     genai.configure(api_key=API_KEY)
 
 # --- TTS & UI TEXT SANITIZATION FUNCTION ---
@@ -19,13 +19,8 @@ def sanitize_text_for_ui_and_voice(raw_text):
     if not raw_text:
         return "Kripya dobara koshish karein, koi jawab prapt nahi hua."
     
-    # 1. Remove markdown symbols that break speech synthesis and clutter UI
     cleaned = re.sub(r"[\*\#\_\[\]\(\)\`\~]", "", raw_text)
-    
-    # 2. Normalize bullet points for clean readability
     cleaned = re.sub(r"^\s*[-*]\s*", "• ", cleaned, flags=re.MULTILINE)
-    
-    # 3. Collapse excessive empty lines
     cleaned = re.sub(r"\n\s*\n", "\n\n", cleaned)
     
     return cleaned.strip()
@@ -82,7 +77,6 @@ st.set_page_config(page_title="Justice Voice - Legal Buddy", page_icon="⚖️",
 st.title("⚖️ Justice Voice (न्याय वाणी)")
 st.subheader("Aapka Apna Legal Buddy - Har Kanooni Sawal ka Aasan Jawab")
 
-# Initialize session state keys safely
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "user_transcript" not in st.session_state:
@@ -90,12 +84,10 @@ if "user_transcript" not in st.session_state:
 if "is_processing" not in st.session_state:
     st.session_state.is_processing = False
 
-# Display prior chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- USER INPUT HANDLING & BULLETPROOF INPUT ROUTER WITH ASYNC STATE LOCKING ---
 chat_input_text = st.chat_input("Yahan apni problem likhein ya bolein...")
 mic_transcript_text = st.session_state.get('speech_transcript', None) or st.session_state.get('user_transcript', None)
 
@@ -114,7 +106,6 @@ if active_query and not st.session_state.is_processing:
     st.session_state.is_processing = True
     cleaned_query = str(active_query).strip()
 
-    # Blacklisted canned fallback strings to filter out
     blacklisted_fallbacks = [
         "Aapko pareshan hone ki zarurat nahi hai",
         "Section 173",
@@ -133,7 +124,7 @@ if active_query and not st.session_state.is_processing:
         with st.chat_message("assistant"):
             with st.spinner("Nyaya Setu soch raha hai..."):
                 try:
-                    if not API_KEY or API_KEY == "AIzaSyDT7AjjhJWQjtnxGJyPOMZvpy_qvNBrvw" or model is None:
+                    if not API_KEY or API_KEY == "APNI_API_KEY_YAHAN_DALEIN" or model is None:
                         reply_text = (
                             "Aapka sawal mil gaya hai! Nyaya Setu real-time response ke liye kripya apni GEMINI_API_KEY set karein. "
                             "Indian law ke mutabiq aap kisi bhi emergency me Police 112, Cyber Crime 1930, ya Women Helpline 1091 par turant sampark kar sakte hain.\n\n"
