@@ -6,8 +6,8 @@ import google.generativeai as genai
 
 # --- API CONFIGURATION ---
 # Reads from Streamlit Cloud Secrets first, then falls back to local env var
-API_KEY = st.secrets.get("GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY", "AQ.Ab8RN6K7jHyLo-EOP6yvo1jKAtihIV1fnoCyuGJwRI5Q3mFD3Q")
-if API_KEY and API_KEY != "AQ.Ab8RN6K7jHyLo-EOP6yvo1jKAtihIV1fnoCyuGJwRI5Q3mFD3Q":
+API_KEY = st.secrets.get("GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY", "AIzaSyDT7AjjhJWQjtnxGJyPOMZvpy_qvNBrvw")
+if API_KEY and API_KEY != "AIzaSyDT7AjjhJWQjtnxGJyPOMZvpy_qvNBrvw":
     genai.configure(api_key=API_KEY)
 
 # --- TTS & UI TEXT SANITIZATION FUNCTION ---
@@ -133,7 +133,7 @@ if active_query and not st.session_state.is_processing:
         with st.chat_message("assistant"):
             with st.spinner("Nyaya Setu soch raha hai..."):
                 try:
-                    if not API_KEY or API_KEY == "AQ.Ab8RN6K7jHyLo-EOP6yvo1jKAtihIV1fnoCyuGJwRI5Q3mFD3Q" or model is None:
+                    if not API_KEY or API_KEY == "AIzaSyDT7AjjhJWQjtnxGJyPOMZvpy_qvNBrvw" or model is None:
                         reply_text = (
                             "Aapka sawal mil gaya hai! Nyaya Setu real-time response ke liye kripya apni GEMINI_API_KEY set karein. "
                             "Indian law ke mutabiq aap kisi bhi emergency me Police 112, Cyber Crime 1930, ya Women Helpline 1091 par turant sampark kar sakte hain.\n\n"
